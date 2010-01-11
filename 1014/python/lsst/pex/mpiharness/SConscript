@@ -1,8 +1,0 @@
-# -*- python -*-
-Import("env")
-
-env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy pex_harness")
-basicLibs = "daf_base pex_exceptions pex_logging pex_policy utils pex_harness".split()
-
-env.LoadableModuleIncomplete("_mpiharnessLib", Split("mpiharnessLib.i"), LIBS=basicLibs + ["pex_mpiharness"])  
-
