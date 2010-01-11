@@ -1,0 +1,10 @@
+# -*- python -*-
+
+Import("env")
+import os
+import glob
+
+pkg = env["eups_product"]
+env.SharedLibrary(pkg, glob.glob("../src/*.cc"),
+    LIBS=filter(lambda x: x != pkg, env.getlibs(pkg)))
+
