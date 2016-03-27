@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -45,7 +45,11 @@ from lsst.daf.persistence import *
 
 import lsst.ctrl.events as events
 
-import os, sys, re, traceback, time
+import os
+import sys
+import re
+import traceback
+import time
 import threading
 
 """
@@ -57,6 +61,7 @@ Pipeline has a __main__ portion as it serves as the main executable program
 ('glue layer') for running a Pipeline. The Pipeline spawns Slice workers 
 using an MPI-2 Spawn operation. 
 """
+
 
 class MpiPipeline(Pipeline):
     '''Python Pipeline class implementation. Contains main pipeline workflow'''
@@ -79,14 +84,12 @@ class MpiPipeline(Pipeline):
         self.forceShutdown = 0
         self.delayTime = 0.01
 
-
     def __del__(self):
         """
         Delete the Pipeline object: clean up
         """
         if self.log is not None:
             self.log.log(self.VERB1, 'Python Pipeline being deleted')
-
 
     def startSlices(self):
         """
@@ -96,8 +99,7 @@ class MpiPipeline(Pipeline):
         self.cppPipeline.startSlices()
         log.done()
 
-
-    def startStagesLoop(self): 
+    def startStagesLoop(self):
         """
         Method to execute loop over Stages
         """
@@ -106,18 +108,18 @@ class MpiPipeline(Pipeline):
         stagelog = TracingLog(looplog, "stage", self.TRACE-1)
         proclog = TracingLog(stagelog, "process", self.TRACE)
 
-        visitcount = 0 
+        visitcount = 0
 
         while True:
 
             time.sleep(self.delayTime)
 
             if ((((self.executionMode == 1) and (visitcount == 1)) or self.forceShutdown == 1)):
-                LogRec(looplog, Log.INFO)  << "terminating pipeline and slices after one loop/visit "
+                LogRec(looplog, Log.INFO) << "terminating pipeline and slices after one loop/visit "
                 self.cppPipeline.invokeShutdown()
-                # 
-                # Need to shutdown Threads here 
-                # 
+                #
+                # Need to shutdown Threads here
+                #
                 break
             else:
                 visitcount += 1
@@ -126,7 +128,7 @@ class MpiPipeline(Pipeline):
                 stagelog.setPreamblePropertyInt("loopnum", visitcount)
                 proclog.setPreamblePropertyInt("loopnum", visitcount)
 
-                # synchronize at the top of the Stage loop 
+                # synchronize at the top of the Stage loop
                 self.cppPipeline.invokeContinue()
 
                 self.startInitQueue()    # place an empty clipboard in the first Queue
@@ -163,8 +165,7 @@ class MpiPipeline(Pipeline):
                 time.sleep(self.delayTime)
                 self.checkExitByVisit()
 
-
-            # Uncomment to print a list of Citizens after each visit 
+            # Uncomment to print a list of Citizens after each visit
             # print datap.Citizen_census(0,0), "Objects:"
             # print datap.Citizen_census(datap.cout,0)
 
@@ -176,12 +177,11 @@ class MpiPipeline(Pipeline):
             finalClipboard.close()
             del finalClipboard
 
-        startStagesLoopLog.log(Log.INFO, "Shutting down pipeline");
+        startStagesLoopLog.log(Log.INFO, "Shutting down pipeline")
         startStagesLoopLog.done()
         self.shutdown()
 
-
-    def checkExitBySyncPoint(self): 
+    def checkExitBySyncPoint(self):
         log = Log(self.log, "checkExitBySyncPoint")
 
         if((self._stop.isSet()) and (self.exitLevel == 2)):
@@ -189,7 +189,7 @@ class MpiPipeline(Pipeline):
             log.log(Log.INFO, "Exit here at a Synchronization point")
             self.forceShutdown = 1
 
-    def checkExitByStage(self): 
+    def checkExitByStage(self):
         log = Log(self.log, "checkExitByStage")
 
         if((self._stop.isSet()) and (self.exitLevel == 3)):
@@ -197,7 +197,7 @@ class MpiPipeline(Pipeline):
             log.log(Log.INFO, "Exit here at the end of the Stage")
             self.forceShutdown = 1
 
-    def checkExitByVisit(self): 
+    def checkExitByVisit(self):
         log = Log(self.log, "checkExitByVisit")
 
         if((self._stop.isSet()) and (self.exitLevel == 4)):
@@ -205,8 +205,7 @@ class MpiPipeline(Pipeline):
             log.log(Log.INFO, "Exit here at the end of the Visit")
             self.forceShutdown = 1
 
-
-    def shutdown(self): 
+    def shutdown(self):
         """
         Shutdown the Pipeline execution: delete the MPI environment
         Send the Exit Event if required
@@ -216,11 +215,11 @@ class MpiPipeline(Pipeline):
         else:
             oneEventTransmitter = events.EventTransmitter(self.eventBrokerHost, self.exitTopic)
             psPtr = dafBase.PropertySet()
-            psPtr.setString("message", str("exiting_") + self._runId )
+            psPtr.setString("message", str("exiting_") + self._runId)
 
             oneEventTransmitter.publish(psPtr)
 
-        # Also have to tell the shutdown Thread to stop  
+        # Also have to tell the shutdown Thread to stop
         self.oneShutdownThread.stop()
         self.oneShutdownThread.join()
         self.log.log(self.VERB2, 'Shutdown thread ended ')
@@ -228,14 +227,13 @@ class MpiPipeline(Pipeline):
         self.log.log(self.VERB2, 'Pipeline calling MPI_Finalize ')
         self.cppPipeline.shutdown()
 
-
     def invokeSyncSlices(self, iStage, stagelog):
         """
         If needed, calls the C++ Pipeline invokeSyncSlices
         """
         invlog = stagelog.traceBlock("invokeSyncSlices", self.TRACE-1)
         if(self.shareDataList[iStage-1]):
-            self.cppPipeline.invokeSyncSlices(); 
+            self.cppPipeline.invokeSyncSlices()
         invlog.done()
 
 trailingpolicy = re.compile(r'_*(policy|dict)$', re.IGNORECASE)

@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -37,7 +37,8 @@ import lsst.ctrl.events as events
 
 import os
 import sys
-import optparse, traceback
+import optparse
+import traceback
 
 usage = """Usage: %prog [-l lev] [-n name] policy runID"""
 desc = """Execute a slice worker process for a pipeline described by the
@@ -51,6 +52,7 @@ cl.add_option("-l", "--log-threshold", type="int", action="store",
               help="the logging message level threshold")
 cl.add_option("-n", "--name", action="store", default=None, dest="name",
               help="a name for identifying the pipeline")
+
 
 def main():
     """parse the input arguments and execute the pipeline
@@ -69,24 +71,25 @@ def main():
 
     runSlice(pipelinePolicyName, runId, cl.opts.logthresh, cl.opts.name)
 
+
 def runSlice(policyFile, runId, logthresh=None, name="unnamed"):
     """
     runSlice: MpiSlice Main execution 
     """
     if name is None or name == "None":
         name = os.path.splitext(os.path.basename(policyFile))[0]
-    
+
     pySlice = MpiSlice(runId, policyFile, name)
     if isinstance(logthresh, int):
         pySlice.setLogThreshold(logthresh)
 
     pySlice.initializeLogger()
 
-    pySlice.configureSlice()   
+    pySlice.configureSlice()
 
-    pySlice.initializeQueues()     
+    pySlice.initializeQueues()
 
-    pySlice.initializeStages()   
+    pySlice.initializeStages()
 
     pySlice.startStagesLoop()
 
@@ -97,7 +100,7 @@ if (__name__ == '__main__'):
     try:
         main()
     except Exception, e:
-        log = Log(Log.getDefaultLog(),"runSlice")
+        log = Log(Log.getDefaultLog(), "runSlice")
         log.log(Log.FATAL, str(e))
         traceback.print_exc(file=sys.stderr)
-        sys.exit(2);
+        sys.exit(2)

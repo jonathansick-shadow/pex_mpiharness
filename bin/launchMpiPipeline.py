@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,21 +11,27 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
 #
 from __future__ import with_statement
-import re, sys, os, os.path, shutil, subprocess
-import optparse, traceback
+import re
+import sys
+import os
+import os.path
+import shutil
+import subprocess
+import optparse
+import traceback
 from lsst.pex.logging import Log
 from lsst.pex.policy import Policy
 import lsst.pex.harness.run as run
@@ -43,7 +49,7 @@ policy file.
 
 cl = optparse.OptionParser(usage=usage, description=desc)
 run.addAllVerbosityOptions(cl)
-cl.add_option("-n", "--nodelist", action="store", dest="nodelist", 
+cl.add_option("-n", "--nodelist", action="store", dest="nodelist",
               metavar="file", help="file containing the MPI machine list")
 
 # command line results
@@ -52,18 +58,21 @@ cl.args = []
 
 pkgdirvar = "PEX_HARNESS_DIR"
 
+
 def createLog():
     log = Log(Log.getDefaultLog(), "harness.launchPipeline")
     return log
 
+
 def setVerbosity(verbosity):
-    logger.setThreshold(run.verbosity2threshold(verbosity, -1))  
+    logger.setThreshold(run.verbosity2threshold(verbosity, -1))
 
 logger = createLog()
 
+
 def main():
     try:
-        (cl.opts, cl.args) = cl.parse_args();
+        (cl.opts, cl.args) = cl.parse_args()
         setVerbosity(cl.opts.verbosity)
 
         if len(cl.args) < 1:
@@ -76,7 +85,7 @@ def main():
         name = None
         if len(cl.args) > 2:
             name = cl.args[2]
-    
+
         launchPipeline(cl.args[0], cl.args[1], name, cl.opts.verbosity)
 
     except SystemExit:
@@ -88,6 +97,7 @@ def main():
         logger.log(Log.FATAL, tb[-1].strip())
         logger.log(Log.DEBUG, "".join(tb[0:-1]).strip())
         sys.exit(1)
+
 
 def launchPipeline(policyFile, runid, name=None, verbosity=None):
     if not os.environ.has_key(pkgdirvar):
@@ -104,7 +114,8 @@ def launchPipeline(policyFile, runid, name=None, verbosity=None):
     with file(nodesfile) as nodelist:
         for node in nodelist:
             node = node.strip()
-            if len(node)==0 or node.startswith('#'): continue
+            if len(node) == 0 or node.startswith('#'):
+                continue
             if node.find(':') >= 0:
                 (node, n) = node.split(':')
             else:
@@ -116,7 +127,8 @@ def launchPipeline(policyFile, runid, name=None, verbosity=None):
             else:
                 nprocs += 1
 
-            if node in nodes_set: continue
+            if node in nodes_set:
+                continue
 
     cmd = "runPipelin.sh.py %s %s %s %d %d" % \
           (policyFile, runid, nodesfile, nnodes, nprocs)
@@ -129,13 +141,14 @@ def launchPipeline(policyFile, runid, name=None, verbosity=None):
 
     raise RuntimeError("Failed to exec runPipeline.sh")
 
+
 def getNode(nodeentry):
     colon = nodeentry.find(':')
-    if colon < 1:  
+    if colon < 1:
         return nodeentry
     else:
         return nodeentry[0:colon]
 
 if __name__ == "__main__":
     main()
-    
+

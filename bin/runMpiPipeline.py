@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -48,7 +48,8 @@ import lsst.ctrl.events as events
 
 import os
 import sys
-import optparse, traceback
+import optparse
+import traceback
 
 usage = """Usage: %prog [-V lev] [-n name] policy runID"""
 desc = """Execute the pipeline described by the given policy, assigning it
@@ -59,6 +60,7 @@ cl = optparse.OptionParser(usage=usage, description=desc)
 cl.add_option("-n", "--name", action="store", default=None, dest="name",
               help="a name for identifying the pipeline")
 run.addVerbosityOption(cl)
+
 
 def main():
     """parse the input arguments and execute the pipeline
@@ -78,6 +80,7 @@ def main():
 
     runPipeline(pipelinePolicyName, runId, logthresh, cl.opts.name)
 
+
 def runPipeline(policyFile, runId, logthresh=None, name=None):
     """
     Create the Pipeline object and start the pipeline execution
@@ -88,25 +91,24 @@ def runPipeline(policyFile, runId, logthresh=None, name=None):
     """
     if name is None or name == "None":
         name = os.path.splitext(os.path.basename(policyFile))[0]
-    
+
     pyPipeline = MpiPipeline(runId, policyFile, name)
     if isinstance(logthresh, int):
         pyPipeline.setLogThreshold(logthresh)
 
-    pyPipeline.initializeLogger()   
+    pyPipeline.initializeLogger()
 
-    pyPipeline.configurePipeline()   
+    pyPipeline.configurePipeline()
 
-    pyPipeline.initializeQueues()  
+    pyPipeline.initializeQueues()
 
-    pyPipeline.initializeStages()    
+    pyPipeline.initializeStages()
 
     pyPipeline.startShutdownThread()
 
-    pyPipeline.startSlices()  
+    pyPipeline.startSlices()
 
     pyPipeline.startStagesLoop()
-
 
 
 if (__name__ == '__main__'):
@@ -116,7 +118,7 @@ if (__name__ == '__main__'):
         print >> sys.stderr, "%s: %s" % (cl.get_prog_name(), e)
         sys.exit(1)
     except Exception, e:
-        log = Log(Log.getDefaultLog(),"runPipeline")
+        log = Log(Log.getDefaultLog(), "runPipeline")
         log.log(Log.FATAL, str(e))
         traceback.print_exc(file=sys.stderr)
         sys.exit(2)

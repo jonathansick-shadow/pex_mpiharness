@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -44,7 +44,10 @@ import lsst.ctrl.events as events
 import lsst.pex.exceptions
 from lsst.pex.exceptions import *
 
-import os, sys, re, traceback
+import os
+import sys
+import re
+import traceback
 import threading
 
 
@@ -60,6 +63,7 @@ Slice has a __main__ portion as it serves as the executable program
 "spawned" within the MPI-2 Spawn of parallel workers in the C++ Pipeline 
 implementation. 
 """
+
 
 class MpiSlice(Slice):
     '''Slice: Python Slice class implementation. Wraps C++ Slice'''
@@ -80,7 +84,6 @@ class MpiSlice(Slice):
         self._rank = self.cppSlice.getRank()
         self.universeSize = self.cppSlice.getUniverseSize()
 
-
     def __del__(self):
         """
         Delete the Slice object: cleanup 
@@ -88,8 +91,7 @@ class MpiSlice(Slice):
         if self.log is not None:
             self.log.log(self.VERB1, 'Python Slice being deleted')
 
-
-    def startStagesLoop(self): 
+    def startStagesLoop(self):
         """
         Execute the Stage loop. The loop progressing in step with 
         the analogous stage loop in the central Pipeline by means of
@@ -120,7 +122,7 @@ class MpiSlice(Slice):
                 self.handleEvents(iStage, stagelog)
 
                 # if(self.isDataSharingOn):
-                #    self.syncSlices(iStage, stagelog) 
+                #    self.syncSlices(iStage, stagelog)
 
                 self.tryProcess(iStage, stageObject, stagelog)
 
@@ -128,7 +130,7 @@ class MpiSlice(Slice):
 
             looplog.log(self.VERB2, "Completed Stage Loop")
 
-            # If no error/exception was flagged, 
+            # If no error/exception was flagged,
             # then clear the final Clipboard in the final Queue
 
             if self.errorFlagged == 0:
@@ -145,11 +147,11 @@ class MpiSlice(Slice):
 
         startStagesLoopLog.done()
 
-    def shutdown(self): 
+    def shutdown(self):
         """
         Shutdown the Slice execution
         """
-        shutlog = Log(self.log, "shutdown", Log.INFO);
+        shutlog = Log(self.log, "shutdown", Log.INFO)
         shutlog.log(Log.INFO, "Shutting down Slice")
         self.cppSlice.shutdown()
 
@@ -157,7 +159,7 @@ class MpiSlice(Slice):
         """
         If needed, performs interSlice communication prior to Stage process
         """
-        synclog = stageLog.traceBlock("syncSlices", self.TRACE-1);
+        synclog = stageLog.traceBlock("syncSlices", self.TRACE-1)
 
         if(self.shareDataList[iStage-1]):
             synclog.log(Log.DEBUG, "Sharing Clipboard data")
@@ -171,7 +173,7 @@ class MpiSlice(Slice):
             for skey in sharedKeys:
 
                 synclog.log(Log.DEBUG,
-                        "Executing C++ syncSlices for keyToShare: " + skey)
+                            "Executing C++ syncSlices for keyToShare: " + skey)
 
                 psPtr = clipboard.get(skey)
                 newPtr = self.cppSlice.syncSlices(psPtr)
@@ -187,9 +189,9 @@ class MpiSlice(Slice):
                     synclog.log(Log.DEBUG,
                                 "Added to Clipboard: %s: %s" % (neighborKey,
                                                                 testString))
-                    
+
                 synclog.log(Log.DEBUG,
-                        "Received PropertySet: " + valuesFromNeighbors)
+                            "Received PropertySet: " + valuesFromNeighbors)
 
             queue.addDataset(clipboard)
 
@@ -199,17 +201,17 @@ class MpiSlice(Slice):
         """
         Executes the try/except construct for Stage process() call 
         """
-        # Important try - except construct around stage process() 
-        proclog = stagelog.traceBlock("tryProcess", self.TRACE-2);
+        # Important try - except construct around stage process()
+        proclog = stagelog.traceBlock("tryProcess", self.TRACE-2)
 
         stageObject = self.stageList[iStage-1]
         proclog.log(self.VERB3, "Getting process signal from Pipeline")
         self.cppSlice.invokeBcast(iStage)
 
-        # Important try - except construct around stage process() 
+        # Important try - except construct around stage process()
         try:
             # If no error/exception has been flagged, run process()
-            # otherwise, simply pass along the Clipboard 
+            # otherwise, simply pass along the Clipboard
             if (self.errorFlagged == 0):
                 processlog = stagelog.traceBlock("process", self.TRACE)
                 stageObject.applyProcess()
@@ -217,7 +219,7 @@ class MpiSlice(Slice):
             else:
                 proclog.log(self.TRACE, "Skipping process due to error")
                 self.transferClipboard(iStage)
-  
+
         ### raise lsst.pex.exceptions.LsstException("Terrible Test Exception")
         except:
             trace = "".join(traceback.format_exception(
@@ -229,12 +231,11 @@ class MpiSlice(Slice):
             # Post the cliphoard that the Stage failed to transfer to the output queue
             self.postOutputClipboard(iStage)
 
-
         proclog.log(self.VERB3, "Getting end of process signal from Pipeline")
         self.cppSlice.invokeBarrier(iStage)
         proclog.done()
 
-        
+
 trailingpolicy = re.compile(r'_*(policy|dict)$', re.IGNORECASE)
 
 if (__name__ == '__main__'):
@@ -244,11 +245,11 @@ if (__name__ == '__main__'):
 
     pySlice = MpiSlice()
 
-    pySlice.configureSlice()   
+    pySlice.configureSlice()
 
-    pySlice.initializeQueues()     
+    pySlice.initializeQueues()
 
-    pySlice.initializeStages()   
+    pySlice.initializeStages()
 
     pySlice.startInitQueue()
 
